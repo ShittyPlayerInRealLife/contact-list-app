@@ -10,22 +10,22 @@ import { TContact } from "../state/contact-list/types";
 import {
   addContactAction,
   clearContactsAction,
-  findContactAction,
   removeContactAction,
+  updateContactAction,
 } from "../state/contact-list/slice";
 
 type TContext = {
   addContact: (contact: TContact) => void;
   clearContacts: () => void;
   removeContact: (letter: string, index: number) => void;
-  findContact: (letter: string) => void;
+  updateContact: (letter: string, index: number, contact: TContact) => void;
 };
 
 const context = createContext<TContext>({
   addContact: () => {},
   clearContacts: () => {},
   removeContact: () => {},
-  findContact: () => {},
+  updateContact: () => {},
 });
 
 export const useContactListContext = () => useContext(context);
@@ -46,13 +46,15 @@ export const ContactListService: FC<PropsWithChildren> = ({ children }) => {
     [],
   );
 
-  const findContact = useCallback((letter: string) => {
-    dispatch(findContactAction(letter));
-  }, []);
+  const updateContact = useCallback(
+    (letter: string, index: number, contact: TContact) =>
+      dispatch(updateContactAction({ letter, index, contact })),
+    [],
+  );
 
   return (
     <context.Provider
-      value={{ addContact, clearContacts, removeContact, findContact }}
+      value={{ addContact, clearContacts, removeContact, updateContact }}
     >
       {children}
     </context.Provider>

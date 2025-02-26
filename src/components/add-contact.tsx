@@ -4,7 +4,7 @@ import { Input } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { TContact } from "../state/contact-list/types";
 import { useContactListContext } from "../services";
-import { ContactModal } from "./contact-modal";
+import { ContactModal } from "./modal/contact-modal/contact-modal";
 import { ContactButton } from "./common/contact-button";
 
 const Wrapper = styled.div`
@@ -20,46 +20,39 @@ const StyledInput = styled(Input)`
   width: 100%;
 `;
 
+const validateName = (value: string): boolean => /^[a-zA-Z]*$/.test(value);
+const validatePhone = (value: string): boolean =>
+  /^[+\d]*$/.test(value) && value.startsWith("+");
+
 export const AddContact: FC = () => {
   const [error, setError] = useState<string | undefined>(undefined);
   const [contact, setContact] = useState<Partial<TContact>>({});
   const { addContact, clearContacts } = useContactListContext();
 
+  const { name, vacancy, phone } = contact;
+
   const onChangeHandler =
     (field: keyof TContact) => (e: ChangeEvent<HTMLInputElement>) => {
       const value = e.currentTarget.value;
 
-      if (field === "name" || field === "vacancy") {
-        if (!/^[a-zA-Z]*$/.test(value)) return;
+      if (field === "name" && !validateName(value)) return;
+      if (field === "phone" && !validatePhone(value)) {
+        setError("Phone number must start with +");
+        setContact((prev) => ({ ...prev, phone: "" }));
+        return;
       }
 
-      if (field === "phone") {
-        if (!/^[+\d]*$/.test(value)) return;
-        if (!value.startsWith("+")) {
-          setError("Phone number must start with +");
-          setContact((prev) => ({ ...prev, phone: "" }));
-          return;
-        }
-      }
       setError(undefined);
       setContact((prev) => ({ ...prev, [field]: value }));
     };
 
   const onKeyPressHandler = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (error) {
-      setError(undefined);
-    }
-    if (e.key === "Enter") {
-      addItemHandler();
-    }
+    if (error) setError(undefined);
+    if (e.key === "Enter") addItemHandler();
   };
 
   const addItemHandler = () => {
-    if (
-      !contact.name?.trim() ||
-      !contact.vacancy?.trim() ||
-      !contact.phone?.trim()
-    ) {
+    if (!name?.trim() || !vacancy?.trim() || !phone?.trim()) {
       setError("All fields are required");
       return;
     }
@@ -67,29 +60,23 @@ export const AddContact: FC = () => {
     setContact({});
   };
 
+  const inputProps = (field: keyof TContact, placeholder: string) => ({
+    placeholder: error ? `${placeholder} is required!` : placeholder,
+    status: (error ? "error" : undefined) as
+      | ""
+      | "error"
+      | "warning"
+      | undefined,
+    value: contact[field] || "",
+    onChange: onChangeHandler(field),
+    onKeyDown: onKeyPressHandler,
+  });
+
   return (
     <Wrapper>
-      <StyledInput
-        placeholder={error ? "Name is required!" : "Name"}
-        status={error ? "error" : undefined}
-        value={contact.name || ""}
-        onChange={onChangeHandler("name")}
-        onKeyDown={onKeyPressHandler}
-      />
-      <StyledInput
-        placeholder={error ? "Vacancy is required!" : "Vacancy"}
-        status={error ? "error" : undefined}
-        value={contact.vacancy || ""}
-        onChange={onChangeHandler("vacancy")}
-        onKeyDown={onKeyPressHandler}
-      />
-      <StyledInput
-        placeholder={error ? "Phone is required" : "Phone: +X XXX XXX XX XX"}
-        status={error ? "error" : undefined}
-        value={contact.phone || ""}
-        onChange={onChangeHandler("phone")}
-        onKeyDown={onKeyPressHandler}
-      />
+      <StyledInput {...inputProps("name", "Name")} />
+      <StyledInput {...inputProps("vacancy", "Vacancy")} />
+      <StyledInput {...inputProps("phone", "Phone")} />
       <ContactButton onClick={addItemHandler}>
         <PlusOutlined />
       </ContactButton>

@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useCallback } from "react";
 import styled from "styled-components";
 import { TContact } from "../../state/contact-list/types";
 import { ContactButton } from "../common/contact-button";
@@ -45,22 +45,32 @@ type TProps = {
 export const LetterList: FC<TProps> = ({ currentLetter, letterContacts }) => {
   const { removeContact } = useContactListContext();
 
+  const handleRemoveContact = useCallback(
+    (index: number) => {
+      removeContact(currentLetter, index);
+    },
+    [currentLetter],
+  );
+
   return (
     <Wrapper>
-      {letterContacts.map((contact, index) => (
-        <Item key={index}>
-          <div>
-            <span>Name: {contact.name}</span>
-            <span>Vacancy: {contact.vacancy}</span>
-            <span>Phone: {contact.phone}</span>
-          </div>
-          <div>
-            <ContactButton onClick={() => removeContact(currentLetter, index)}>
-              <CloseOutlined />
-            </ContactButton>
-          </div>
-        </Item>
-      ))}
+      {letterContacts.map((contact, index) => {
+        const { name, vacancy, phone } = contact;
+        return (
+          <Item key={index}>
+            <div>
+              <span>Name: {name}</span>
+              <span>Vacancy: {vacancy}</span>
+              <span>Phone: {phone}</span>
+            </div>
+            <div>
+              <ContactButton onClick={() => handleRemoveContact(index)}>
+                <CloseOutlined />
+              </ContactButton>
+            </div>
+          </Item>
+        );
+      })}
     </Wrapper>
   );
 };

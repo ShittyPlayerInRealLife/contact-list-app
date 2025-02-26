@@ -4,6 +4,9 @@ export type TContact = {
   phone: string;
 };
 
-export type TContactsState = {
-  contacts: Record<string, TContact[]>;
+export type TContactsGroup = {
+  letter: string;
+  contacts: TContact[];
 };
+
+export type TContactsState = TContactsGroup[];
